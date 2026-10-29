@@ -1,0 +1,10 @@
+# Raw exports contain names, emails and IP addresses (PII) - never commit
+registrations_*.json
+registrations_*.json.bak
+dashboard_data_2025.json
+dashboard_data.json.bak
+*.bak
+# Local/editor
+.DS_Store
+.bob/
+__pycache__/

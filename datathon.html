@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>IBM Z Datathon 2026 — Registration Insights</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    :root{
+      --ibm-blue:#0f62fe;--ibm-gray-100:#161616;--ibm-gray-70:#525252;
+      --ibm-gray-20:#dde1e6;--bg:#f4f4f4;--surface:#ffffff;
+      --teal:#009d9a;--purple:#6929c4;--green:#24a148;--red:#da1e28;--orange:#ff832b;
+    }
+    body{background:var(--bg);color:var(--ibm-gray-100);font-family:-apple-system,"Segoe UI",sans-serif;font-size:.925rem;}
+    .navbar{border-bottom:3px solid var(--ibm-blue);}
+    .kpi-card{background:var(--surface);border-left:4px solid var(--ibm-blue);border-radius:6px;padding:1rem 1.25rem;transition:.15s;cursor:pointer;}
+    .kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+    .kpi-card:focus-visible{outline:2px solid var(--ibm-blue);outline-offset:2px;}
+    .kpi-value{font-size:1.9rem;font-weight:700;line-height:1;color:var(--ibm-blue);}
+    .kpi-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ibm-gray-70);margin-top:.2rem;min-height:2.4em;line-height:1.2;}
+    a.kpi-link{display:block;height:100%;text-decoration:none;color:inherit;}
+    a.kpi-link .kpi-card{height:100%;cursor:pointer;}
+    a.kpi-link:focus-visible .kpi-card{outline:2px solid var(--ibm-blue);outline-offset:2px;}
+    html{scroll-behavior:smooth;}
+    .chart-card[id]{scroll-margin-top:1rem;}
+    .chart-card:target{box-shadow:0 0 0 2px var(--ibm-blue);}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
+    .nav-tabs .nav-link{color:var(--ibm-gray-70);border:none;padding:.55rem .9rem;font-size:.85rem;}
+    .nav-tabs .nav-link.active{color:var(--ibm-blue);border-bottom:3px solid var(--ibm-blue);background:transparent;font-weight:700;}
+    .nav-tabs{border-bottom:2px solid var(--ibm-gray-20);flex-wrap:wrap;}
+    .chart-card{background:var(--surface);border-radius:6px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+    .chart-title{font-weight:600;font-size:.88rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem;color:var(--ibm-gray-100);}
+    .chart-title i{color:var(--ibm-blue);}
+    .echart{width:100%;}
+    .callout{background:#fff8e1;border-left:4px solid #f5a623;border-radius:4px;padding:.75rem 1rem;font-size:.85rem;}
+    .callout-info{background:#e8f4fd;border-left-color:var(--ibm-blue);}
+    .callout-good{background:#defbe6;border-left-color:var(--green);}
+    .callout-bad{background:#fff1f1;border-left-color:var(--red);}
+    .cat-badge{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:middle;}
+    .progress{height:7px;border-radius:4px;background:var(--ibm-gray-20);}
+    .cat-table th{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ibm-gray-70);}
+    .insight-badge{background:var(--surface);border:1px solid var(--ibm-gray-20);border-radius:6px;padding:.6rem .9rem;font-size:.82rem;display:flex;gap:.5rem;align-items:flex-start;}
+    .insight-badge i{color:var(--ibm-blue);flex-shrink:0;margin-top:.1rem;}
+    footer{border-top:1px solid var(--ibm-gray-20);font-size:.76rem;color:var(--ibm-gray-70);}
+    @media(max-width:576px){.kpi-value{font-size:1.4rem;}.chart-card{padding:.9rem;}}
+      .back-link{color:#c6c6c6;text-decoration:none;font-size:.8rem;}
+    .back-link:hover{color:#fff;}
+    .finding{background:var(--surface);border:1px solid var(--ibm-gray-20);border-radius:6px;padding:.6rem .9rem;font-size:.84rem;height:100%;}
+    .finding strong{display:block;margin-bottom:.15rem;}
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-4 py-2">
+  <span class="navbar-brand mb-0 h6">
+    <i class="bi bi-trophy me-2 text-primary"></i>
+    <span style="font-weight:700;">IBM Z Datathon 2026</span>
+    <small class="text-secondary fw-normal ms-2" style="font-size:.76rem;">Registration insights</small>
+  </span>
+  <a class="back-link" href="index.html"><i class="bi bi-arrow-left me-1"></i>Back to main dashboard</a>
+</nav>
+
+<main class="container-fluid px-3 px-md-4 py-4" style="max-width:1440px;">
+  <div id="dt-error" class="alert alert-warning d-none"></div>
+    <div class="row g-4" id="dt-body">
+      <div class="col-12">
+        <div class="callout callout-info" id="dt-note"></div>
+      </div>
+
+      <div class="col-12"><div class="row g-3" id="dt-kpis"></div></div>
+
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-lightbulb"></i>Key findings</div>
+          <div class="row g-2" id="dt-findings"></div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="chart-card" id="dt-sec-daily">
+          <div class="chart-title"><i class="bi bi-calendar3"></i>Registrations per day, by status (UTC)</div>
+          <div id="dt-chart-daily" class="echart" style="height:300px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-clock"></i>Registrations by hour of day (UTC)</div>
+          <div id="dt-chart-hourly" class="echart" style="height:280px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card" id="dt-sec-countries">
+          <div class="chart-title"><i class="bi bi-globe2"></i>Top 15 countries</div>
+          <div id="dt-chart-countries" class="echart" style="height:280px;"></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="chart-card" id="dt-sec-orgs">
+          <div class="chart-title"><i class="bi bi-building"></i>Top organizations (case-insensitive match)</div>
+          <div class="table-responsive">
+            <table class="table table-hover cat-table align-middle mb-0">
+              <thead class="table-light"><tr><th>#</th><th>Organization</th><th class="text-end">Registrations</th><th class="text-end">Approved</th></tr></thead>
+              <tbody id="dt-org-tbody"></tbody>
+            </table>
+          </div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;" id="dt-org-note"></p>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-table"></i>Country detail</div>
+          <div class="table-responsive">
+            <table class="table table-hover cat-table align-middle mb-0">
+              <thead class="table-light"><tr><th>Country</th><th class="text-end">Registrations</th><th class="text-end">Approved</th><th class="text-end">Approval</th></tr></thead>
+              <tbody id="dt-country-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="chart-card" id="dt-sec-event">
+          <div class="chart-title"><i class="bi bi-tag"></i>Event code</div>
+          <div id="dt-chart-event" class="echart" style="height:260px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-envelope"></i>Email type</div>
+          <div id="dt-chart-email" class="echart" style="height:260px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-xl-4">
+        <div class="chart-card" id="dt-sec-status">
+          <div class="chart-title"><i class="bi bi-activity"></i>Final status</div>
+          <div id="dt-chart-status" class="echart" style="height:260px;"></div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="chart-card" id="dt-sec-checks">
+          <div class="chart-title"><i class="bi bi-shield-check"></i>Automated checks — passed vs failed</div>
+          <div id="dt-chart-checks" class="echart" style="height:280px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">
+            Event-code registrations are whitelisted, so a failed IP, email or export check did not block them:
+            <strong id="dt-approved-despite"></strong> records with at least one failed check were still approved.
+          </p>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-hdd-network"></i>IP fraud score distribution</div>
+          <div id="dt-chart-ip" class="echart" style="height:260px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-envelope-exclamation"></i>Email fraud score distribution</div>
+          <div id="dt-chart-emailscore" class="echart" style="height:260px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;" id="dt-email-note"></p>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-card-text"></i>Purpose text length (characters)</div>
+          <div id="dt-chart-len" class="echart" style="height:260px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;" id="dt-len-note"></p>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-lightbulb"></i>Project themes mentioned in purpose (keyword match, a record can match several)</div>
+          <div id="dt-chart-themes" class="echart" style="height:260px;"></div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-diagram-3"></i>Lifecycle &amp; review</div>
+          <div class="table-responsive">
+            <table class="table cat-table align-middle mb-0">
+              <thead class="table-light"><tr><th>Metric</th><th class="text-end">Value</th></tr></thead>
+              <tbody id="dt-life-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+</main>
+
+<footer class="text-center py-3 mt-4">
+  LinuxONE Community Cloud &mdash; Datathon 2026 insights &nbsp;|&nbsp; Aggregated data only (no personal information)
+</footer>
+
+<script>
+const P = ['#0f62fe','#009d9a','#6929c4','#da1e28','#ff832b','#24a148','#ee5396','#1192e8','#a56eff','#005d5d'];
+const fmt = n => n.toLocaleString();
+const pct = (a,b) => b ? (100*a/b).toFixed(1)+'%' : '—';
+
+// ─── Datathon 2026 insights (data: datathon_data.json, built by generate_datathon_data.py) ───
+let dtState = 'idle';   // idle | loading | done | failed
+function renderDatathon() {
+  if (dtState !== 'idle') return;
+  dtState = 'loading';
+  fetch('datathon_data.json')
+    .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(d => { buildDatathon(d); dtState = 'done'; window.dispatchEvent(new Event('resize')); })
+    .catch(e => {
+      dtState = 'failed';
+      document.getElementById('dt-body').classList.add('d-none');
+      const el = document.getElementById('dt-error');
+      el.classList.remove('d-none');
+      el.innerHTML = 'Could not load datathon_data.json — run <code>python3 filter_datathon.py &amp;&amp; python3 generate_datathon_data.py</code> first.';
+      console.error('datathon_data.json', e);
+    });
+}
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const STATUS_COLORS = {success:'#24a148', expired:'#ff832b', rejected:'#da1e28'};
+function dtChart(id, opt) {
+  const c = echarts.init(document.getElementById(id));
+  c.setOption(opt);
+  window.addEventListener('resize', () => c.resize());
+  return c;
+}
+function dtBars(id, labels, values, color, horizontal) {
+  const cat = {type:'category', data:labels, axisLabel:{fontSize:10, rotate: horizontal?0:0}};
+  const val = {type:'value', minInterval:1};
+  dtChart(id, {
+    tooltip:{trigger:'axis'},
+    grid:{left: horizontal?150:45, right:50, top:10, bottom:30},
+    xAxis: horizontal ? val : cat,
+    yAxis: horizontal ? {...cat, inverse:true} : val,
+    series:[{type:'bar', data:values, itemStyle:{color}, label:{show:true, position: horizontal?'right':'top', fontSize:10, formatter:p=>fmt(p.value)}}],
+  });
+}
+function dtDonut(id, obj, colors) {
+  const data = Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,...(colors&&colors[name]?{itemStyle:{color:colors[name]}}:{})}));
+  const total = data.reduce((s,x)=>s+x.value,0);
+  dtChart(id, {
+    tooltip:{trigger:'item', formatter:p=>`${esc(p.name)}<br/>${fmt(p.value)} (${(100*p.value/total).toFixed(1)}%)`},
+    legend:{bottom:0, textStyle:{fontSize:10}, icon:'roundRect', itemWidth:10, itemHeight:10},
+    color:P,
+    series:[{type:'pie', radius:['38%','62%'], center:['50%','44%'], data, label:{show:false}}],
+  });
+}
+
+function buildDatathon(d) {
+  const s = d.summary;
+  buildFindings(d);
+
+  document.getElementById('dt-note').innerHTML =
+    `<strong>Scope:</strong> ${fmt(s.total)} 2026 registrations related to the IBM Z Datathon, ${esc(s.first)} – ${esc(s.last)}. ` +
+    `${fmt(s.event_ssf2026)} carry event code <code>SSF2026</code>; ${fmt(s.text_only)} more have another event code but mention “datathon” in their purpose or organization. ` +
+    `Some Datathon participants may be missing if they used neither.`;
+
+  const kpis = [
+    [fmt(s.total),'Datathon registrations','var(--ibm-blue)','dt-sec-event'],
+    [fmt(s.approved),'Approved','var(--green)','dt-sec-status'],
+    [s.approval_rate+'%','Approval rate','var(--green)','dt-sec-checks'],
+    [fmt(s.countries),'Countries','var(--teal)','dt-sec-countries'],
+    [fmt(s.organizations),'Distinct organizations','var(--purple)','dt-sec-orgs'],
+    [fmt(s.peak_day_count),'Peak day ('+esc(s.peak_day)+')','var(--orange)','dt-sec-daily'],
+  ];
+  document.getElementById('dt-kpis').innerHTML = kpis.map(([v,l,c,t]) =>
+    `<div class="col-6 col-sm-4 col-xl-2"><a class="kpi-link" href="#${t}" title="Go to section"><div class="kpi-card" style="border-left-color:${c}"><div class="kpi-value" style="color:${c}">${v}</div><div class="kpi-label">${l}</div></div></a></div>`).join('');
+
+  // daily by status
+  dtChart('dt-chart-daily', {
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0, data:Object.keys(d.daily.status)},
+    grid:{left:50, right:20, top:20, bottom:50},
+    xAxis:{type:'category', data:d.daily.labels.map(x=>x.slice(5)), axisLabel:{rotate:45, fontSize:11}},
+    yAxis:{type:'value', minInterval:1},
+    series:Object.entries(d.daily.status).map(([name,data])=>({name, type:'bar', stack:'s', data, itemStyle:{color:STATUS_COLORS[name]||'#8d8d8d'}})),
+  });
+
+  dtBars('dt-chart-hourly', d.hourly.map((_,h)=>String(h).padStart(2,'0')), d.hourly, '#0f62fe', false);
+  dtBars('dt-chart-countries', d.countries.labels, d.countries.counts, '#009d9a', true);
+
+  document.getElementById('dt-org-tbody').innerHTML = d.orgs_top.map((o,i) =>
+    `<tr><td>${i+1}</td><td>${esc(o.name)}</td><td class="text-end">${fmt(o.count)}</td><td class="text-end">${fmt(o.approved)}</td></tr>`).join('');
+  document.getElementById('dt-org-note').textContent =
+    `${fmt(s.no_org)} registrations (${pct(s.no_org, s.total)}) left the organization blank and are not counted above.`;
+
+  document.getElementById('dt-country-tbody').innerHTML = d.country_rows.map(r =>
+    `<tr><td>${esc(r.country)}</td><td class="text-end">${fmt(r.count)}</td><td class="text-end">${fmt(r.approved)}</td><td class="text-end">${pct(r.approved, r.count)}</td></tr>`).join('');
+
+  dtDonut('dt-chart-event', d.event_codes);
+  dtDonut('dt-chart-email', d.email_types);
+  dtDonut('dt-chart-status', d.status, STATUS_COLORS);
+
+  // checks
+  const names = d.checks.map(c => c.name.replace('Check',''));
+  dtChart('dt-chart-checks', {
+    tooltip:{trigger:'axis', axisPointer:{type:'shadow'}},
+    legend:{bottom:0, data:['Passed','Failed']},
+    grid:{left:120, right:50, top:10, bottom:40},
+    xAxis:{type:'value', minInterval:1},
+    yAxis:{type:'category', data:names, inverse:true},
+    series:[
+      {name:'Passed', type:'bar', stack:'c', data:d.checks.map(c=>c.passed), itemStyle:{color:'#24a148'}},
+      {name:'Failed', type:'bar', stack:'c', data:d.checks.map(c=>c.failed), itemStyle:{color:'#da1e28'},
+       label:{show:true, position:'right', formatter:p=>fmt(p.value)}},
+    ],
+  });
+  document.getElementById('dt-approved-despite').textContent = fmt(d.any_fail_approved);
+
+  dtBars('dt-chart-ip', d.ip_scores.labels, d.ip_scores.counts, '#6929c4', false);
+  dtBars('dt-chart-emailscore', d.email_scores.labels, d.email_scores.counts, '#ee5396', false);
+  document.getElementById('dt-email-note').textContent =
+    `“No score” covers emails that passed the check plus ${fmt(d.leaked_email)} that failed because the address appeared in a leak list; neither returns a numeric score.`;
+
+  dtBars('dt-chart-len', d.purpose_len.labels, d.purpose_len.counts, '#1192e8', false);
+  document.getElementById('dt-len-note').textContent =
+    `Average ${fmt(d.purpose_len_avg)} characters, median ${fmt(d.purpose_len_median)}.`;
+
+  const th = Object.entries(d.themes).sort((a,b)=>b[1]-a[1]);
+  dtBars('dt-chart-themes', th.map(x=>x[0]), th.map(x=>x[1]), '#198038', true);
+
+  const L = d.lifecycle;
+  const sec = v => v == null ? '—' : (v >= 120 ? (v/60).toFixed(1)+' min' : v.toFixed(0)+' s');
+  const rows = [
+    ['Activated (activation-success email sent)', `${fmt(s.activated)} (${pct(s.activated, s.total)})`],
+    ['Median time from registration to activation email', sec(L.median_activation_s)],
+    ['90th-percentile time to activation email', sec(L.p90_activation_s)],
+    ['VM activation attempts that failed at least once', fmt(L.vm_activation_failed)],
+    ['Expired accounts', fmt(L.expired)],
+    ['Rejected by manual review', fmt(L.manual_reject)],
+    ...Object.entries(d.review_reasons).map(([k,v]) => ['Review list: '+k, fmt(v)]),
+    ...Object.entries(d.whitelist_reasons).map(([k,v]) => ['Whitelist: '+k, fmt(v)]),
+  ];
+  document.getElementById('dt-life-tbody').innerHTML = rows.map(([k,v]) =>
+    `<tr><td>${esc(k)}</td><td class="text-end">${esc(v)}</td></tr>`).join('');
+}
+
+function buildFindings(d) {
+  const s = d.summary, L = d.lifecycle;
+  const topC = d.country_rows[0], topO = d.orgs_top[0];
+  const ip100 = d.ip_scores.counts[d.ip_scores.labels.indexOf('100')];
+  const ip85 = d.ip_scores.counts[d.ip_scores.labels.indexOf('85–99')];
+  const peakHour = d.hourly.indexOf(Math.max(...d.hourly));
+  const burst = d.daily.labels.map((l,i)=>[l, Object.values(d.daily.status).reduce((a,v)=>a+v[i],0)])
+                  .sort((a,b)=>b[1]-a[1]).slice(0,2);
+  const burstShare = pct(burst[0][1]+burst[1][1], s.total);
+  const items = [
+    ['Almost everyone was approved',
+     `${fmt(s.approved)} of ${fmt(s.total)} (${s.approval_rate}%) were approved; only ${fmt(s.rejected)} were rejected. Event-code whitelisting bypasses the fraud gates.`],
+    ['Registrations came in a short burst',
+     `${esc(burst[0][0])} and ${esc(burst[1][0])} account for ${burstShare} of all Datathon registrations. Hourly peak is ${String(peakHour).padStart(2,'0')}:00 UTC.`],
+    [`${esc(topC.country)} is the largest source`,
+     `${esc(topC.country)} contributes ${fmt(topC.count)} registrations (${pct(topC.count, s.total)}) out of ${fmt(s.countries)} countries.`],
+    ['A few institutions drive volume',
+     `${esc(topO.name)} leads the named organizations with ${fmt(topO.count)}; ${pct(s.no_org, s.total)} of registrations gave no organization at all.`],
+    ['Fraud checks did not gate approval',
+     `${fmt(d.any_fail_approved)} approved records (${pct(d.any_fail_approved, s.approved)}) failed at least one automated check; ${fmt(ip100 + ip85)} have an IP fraud score of 85 or higher.`],
+    ['Activation is fast',
+     `Median ${L.median_activation_s != null ? L.median_activation_s.toFixed(0) : '—'} s from registration to activation email; ${fmt(L.vm_activation_failed)} registrations had a failed VM activation attempt.`],
+  ];
+  document.getElementById('dt-findings').innerHTML = items.map(([t,b]) =>
+    `<div class="col-12 col-md-6 col-xl-4"><div class="finding"><strong>${t}</strong><span style="color:#525252">${b}</span></div></div>`).join('');
+}
+
+renderDatathon();
+</script>
+</body>
+</html>

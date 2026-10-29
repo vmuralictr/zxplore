@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>LinuxONE Community Cloud — Registration Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    :root{
+      --ibm-blue:#0f62fe;--ibm-gray-100:#161616;--ibm-gray-70:#525252;
+      --ibm-gray-20:#dde1e6;--bg:#f4f4f4;--surface:#ffffff;
+      --teal:#009d9a;--purple:#6929c4;--green:#24a148;--red:#da1e28;--orange:#ff832b;
+    }
+    body{background:var(--bg);color:var(--ibm-gray-100);font-family:-apple-system,"Segoe UI",sans-serif;font-size:.925rem;}
+    .navbar{border-bottom:3px solid var(--ibm-blue);}
+    .kpi-card{background:var(--surface);border-left:4px solid var(--ibm-blue);border-radius:6px;padding:1rem 1.25rem;transition:.15s;cursor:pointer;}
+    .kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+    .kpi-card:focus-visible{outline:2px solid var(--ibm-blue);outline-offset:2px;}
+    .kpi-value{font-size:1.9rem;font-weight:700;line-height:1;color:var(--ibm-blue);}
+    .kpi-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ibm-gray-70);margin-top:.2rem;}
+    .nav-tabs .nav-link{color:var(--ibm-gray-70);border:none;padding:.55rem .9rem;font-size:.85rem;}
+    .nav-tabs .nav-link.active{color:var(--ibm-blue);border-bottom:3px solid var(--ibm-blue);background:transparent;font-weight:700;}
+    .nav-tabs{border-bottom:2px solid var(--ibm-gray-20);flex-wrap:wrap;}
+    .chart-card{background:var(--surface);border-radius:6px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+    .chart-title{font-weight:600;font-size:.88rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem;color:var(--ibm-gray-100);}
+    .chart-title i{color:var(--ibm-blue);}
+    .echart{width:100%;}
+    .callout{background:#fff8e1;border-left:4px solid #f5a623;border-radius:4px;padding:.75rem 1rem;font-size:.85rem;}
+    .callout-info{background:#e8f4fd;border-left-color:var(--ibm-blue);}
+    .callout-good{background:#defbe6;border-left-color:var(--green);}
+    .callout-bad{background:#fff1f1;border-left-color:var(--red);}
+    .cat-badge{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:middle;}
+    .progress{height:7px;border-radius:4px;background:var(--ibm-gray-20);}
+    .cat-table th{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ibm-gray-70);}
+    .insight-badge{background:var(--surface);border:1px solid var(--ibm-gray-20);border-radius:6px;padding:.6rem .9rem;font-size:.82rem;display:flex;gap:.5rem;align-items:flex-start;}
+    .insight-badge i{color:var(--ibm-blue);flex-shrink:0;margin-top:.1rem;}
+    footer{border-top:1px solid var(--ibm-gray-20);font-size:.76rem;color:var(--ibm-gray-70);}
+    @media(max-width:576px){.kpi-value{font-size:1.4rem;}.chart-card{padding:.9rem;}}
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-4 py-2">
+  <span class="navbar-brand mb-0 h6">
+    <i class="bi bi-server me-2 text-primary"></i>
+    <span style="font-weight:700;">LinuxONE Community Cloud</span>
+    <small class="text-secondary fw-normal ms-2" style="font-size:.76rem;">2025 + 2026 Registration Analysis</small>
+  </span>
+  <span id="nav-date-range" class="text-secondary" style="font-size:.78rem;"></span>
+</nav>
+
+<main class="container-fluid px-3 px-md-4 py-4" style="max-width:1440px;">
+
+  <!-- KPIs — each card navigates to the relevant tab on click -->
+  <div class="row g-3 mb-4" id="kpi-row">
+    <div class="col-6 col-sm-4 col-xl-2">
+      <div class="kpi-card" data-tab="tab-overview" role="button" tabindex="0" title="Go to Monthly Overview"><div class="kpi-value" id="kpi-total">—</div><div class="kpi-label">Total Registrations</div></div>
+    </div>
+    <div class="col-6 col-sm-4 col-xl-2">
+      <div class="kpi-card" style="border-left-color:var(--green)" data-tab="tab-fraud" role="button" tabindex="0" title="Go to Fraud Scores"><div class="kpi-value" style="color:var(--green)" id="kpi-approved">—</div><div class="kpi-label">Approved</div></div>
+    </div>
+    <div class="col-6 col-sm-4 col-xl-2">
+      <div class="kpi-card" style="border-left-color:var(--teal)" data-tab="tab-correlations" role="button" tabindex="0" title="Go to Country Correlations"><div class="kpi-value" style="color:var(--teal)" id="kpi-countries">—</div><div class="kpi-label">Countries</div></div>
+    </div>
+    <div class="col-6 col-sm-4 col-xl-2">
+      <div class="kpi-card" style="border-left-color:var(--purple)" data-tab="tab-overview" role="button" tabindex="0" title="Go to Monthly Overview"><div class="kpi-value" style="color:var(--purple)" id="kpi-2025">—</div><div class="kpi-label">2025 Registrations</div></div>
+    </div>
+    <div class="col-6 col-sm-4 col-xl-2">
+      <div class="kpi-card" style="border-left-color:var(--orange)" data-tab="tab-overview" role="button" tabindex="0" title="Go to Monthly Overview"><div class="kpi-value" style="color:var(--orange)" id="kpi-2026">—</div><div class="kpi-label">2026 Registrations</div></div>
+    </div>
+    <div class="col-6 col-sm-4 col-xl-2">
+      <div class="kpi-card" style="border-left-color:var(--red)" data-tab="tab-fraud" role="button" tabindex="0" title="Go to Fraud Scores"><div class="kpi-value" style="color:var(--red)" id="kpi-reject-pct">—</div><div class="kpi-label">Rejection Rate</div></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" id="mainTabs">
+    <li class="nav-item"><button class="nav-link active" data-tab="tab-overview"><i class="bi bi-bar-chart-line me-1"></i>Monthly Overview</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-categories"><i class="bi bi-tag me-1"></i>Categories</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-limit"><i class="bi bi-rulers me-1"></i>75-char Impact</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-spam"><i class="bi bi-trash3 me-1"></i>Spam by Country</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-events"><i class="bi bi-calendar-event me-1"></i>Events</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-fraud"><i class="bi bi-shield-exclamation me-1"></i>Fraud Scores</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-correlations"><i class="bi bi-globe2 me-1"></i>Country Correlations</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-timeline"><i class="bi bi-calendar-range me-1"></i>75-char Timeline</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="tab-insights"><i class="bi bi-lightbulb me-1"></i>Insights</button></li>
+    <li class="nav-item ms-auto"><a class="nav-link" href="datathon.html" style="color:var(--ibm-blue);font-weight:600;"><i class="bi bi-trophy me-1"></i>Datathon 2026 insights <i class="bi bi-box-arrow-up-right ms-1" style="font-size:.7rem;"></i></a></li>
+  </ul>
+
+  <!-- ── TAB 1: Monthly Overview ─────────────────────────────────────────── -->
+  <div id="tab-overview" class="tab-pane">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-bar-chart-line"></i>Total registrations per month (2025–2026)</div>
+          <div id="chart-monthly-total" class="echart" style="height:320px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-check-circle"></i>Approved registrations per month</div>
+          <div id="chart-monthly-approved" class="echart" style="height:280px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-mortarboard"></i>Education-related registrations per month</div>
+          <div id="chart-monthly-edu" class="echart" style="height:280px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">Includes: Learning Linux, Learning Programming, General Learning, Research / Academic.</p>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-award"></i>IBM Z Xplore registrations per month (event-code + purpose match)</div>
+          <div id="chart-monthly-zxplore" class="echart" style="height:280px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">Counts registrations with <code>eventCode=IBMZXPLORE</code> or a Z Xplore keyword in the purpose field.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 2: Categories ─────────────────────────────────────────────── -->
+  <div id="tab-categories" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="callout callout-info">
+          <strong>Note:</strong> "Approved" = <code>success</code>, <code>expired</code>, or <code>waitforactive</code>.
+          The <em>Other / Unclassified</em> bucket is large because many purposes are free-form narratives not matched by the current regex rules.
+        </div>
+      </div>
+
+      <!-- Overall donut + all-vs-approved bar — equal height row -->
+      <div class="col-12 col-lg-5 d-flex">
+        <div class="chart-card w-100">
+          <div class="chart-title"><i class="bi bi-pie-chart"></i>Category share — all registrations (2025 + 2026)</div>
+          <div id="chart-donut-all" class="echart" style="height:460px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-7 d-flex">
+        <div class="chart-card w-100">
+          <div class="chart-title"><i class="bi bi-bar-chart-horizontal"></i>All vs Approved — count by category</div>
+          <div id="chart-cat-compare" class="echart" style="height:460px;"></div>
+        </div>
+      </div>
+
+      <!-- ── NEW: 2025 vs 2026 breakdown — ALL users ── -->
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-calendar2-range"></i>Category counts — 2025 vs 2026 (all users)</div>
+          <div id="chart-cat-year-all" class="echart" style="height:460px;"></div>
+        </div>
+      </div>
+
+      <!-- ── NEW: 2025 vs 2026 breakdown — APPROVED users ── -->
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-calendar2-check"></i>Category counts — 2025 vs 2026 (approved users only)</div>
+          <div id="chart-cat-year-appr" class="echart" style="height:460px;"></div>
+        </div>
+      </div>
+
+      <!-- Full table -->
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-table"></i>Full breakdown — all registrations (2025 + 2026 + approved)</div>
+          <div class="table-responsive">
+            <table class="table table-hover cat-table align-middle mb-0">
+              <thead class="table-light"><tr>
+                <th>#</th><th>Category</th>
+                <th class="text-end">All</th>
+                <th class="text-end">2025</th><th class="text-end">2026</th>
+                <th class="text-end">Approved</th><th class="text-end">Appr 2025</th><th class="text-end">Appr 2026</th>
+                <th class="text-end">Appr %</th><th style="min-width:120px;">Share (all)</th>
+              </tr></thead>
+              <tbody id="cat-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: 75-char Impact ─────────────────────────────────────────── -->
+  <div id="tab-limit" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="callout">
+          <i class="bi bi-exclamation-triangle-fill me-2" style="color:#f5a623;"></i>
+          <strong>75-char minimum enforced from 10 Jul 2025.</strong>
+          Before the limit: 88% of purposes were ≤75 chars — users padded with filler.
+          After: 97% exceed 75 chars — users write genuine, longer descriptions.
+          <br/><strong>Categories that dropped share:</strong> <span id="limit-drop-list" style="color:#da1e28;font-weight:600;"></span>.
+          <strong>Categories that grew:</strong> <span id="limit-rise-list" style="color:#24a148;font-weight:600;"></span>.
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-arrow-left-right"></i>Category share before vs after the 75-char limit removal (% of registrations in each period)</div>
+          <div id="chart-limit-compare" class="echart" style="height:500px;"></div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-table"></i>Detailed impact table</div>
+          <div class="table-responsive">
+            <table class="table table-hover cat-table align-middle mb-0">
+              <thead class="table-light"><tr>
+                <th>Category</th>
+                <th class="text-end">Pre count</th><th class="text-end">Pre %</th>
+                <th class="text-end">Post count</th><th class="text-end">Post %</th>
+                <th class="text-end">Δ pp</th>
+              </tr></thead>
+              <tbody id="limit-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 4: Spam by Country ─────────────────────────────────────────── -->
+  <div id="tab-spam" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="callout callout-bad">
+          <strong>Spam / Garbage</strong> = categories <em>Filler / Spam</em> and <em>Marketing Spam / Template</em>.
+          Morocco (MA) and China (CN) are the dominant sources. The chart below shows monthly spam volumes per country.
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-trash3"></i>Spam registrations per country per month</div>
+          <div id="chart-spam-heatmap" class="echart" style="height:380px;"></div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-bar-chart-line"></i>Monthly spam volume — top countries stacked</div>
+          <div id="chart-spam-stacked" class="echart" style="height:320px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 5: Events ─────────────────────────────────────────────────── -->
+  <div id="tab-events" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="callout callout-good">
+          Registrations with a <strong>non-default event code are auto-approved</strong> (whitelisted bypass) — they skip all fraud checks.
+          <code>IBMZXPLORE</code> and <code>SSF2025</code> together account for ~2,800 guaranteed approvals.
+          <strong>Recommendation:</strong> new event codes should be reviewed carefully before activation — a bad actor with a valid code bypasses IP/email scoring entirely (IP-fail rates as high as 89% on some event codes).
+        </div>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-calendar-event"></i>Total registrations by event code</div>
+          <div id="chart-event-bar" class="echart" style="height:380px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-7">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-shield-check"></i>Approval rate, IP-fail %, email-fail % by event</div>
+          <div id="chart-event-rates" class="echart" style="height:380px;"></div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-graph-up"></i>Monthly registrations by event code (top events)</div>
+          <div id="chart-event-monthly" class="echart" style="height:340px;"></div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-table"></i>Event summary table</div>
+          <div class="table-responsive">
+            <table class="table table-hover cat-table align-middle mb-0">
+              <thead class="table-light"><tr>
+                <th>Event Code</th><th class="text-end">Total</th><th class="text-end">Approved</th>
+                <th class="text-end">Appr %</th><th class="text-end">IP Fail %</th><th class="text-end">Email Fail %</th>
+                <th>Top Categories</th>
+              </tr></thead>
+              <tbody id="event-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 6: Fraud Scores ────────────────────────────────────────────── -->
+  <div id="tab-fraud" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="callout callout-bad">
+          <strong>Key finding:</strong> A fraud score of 100 (IP or email) nearly guarantees rejection — only ~12% of IP-100 registrations and ~4% of email-100 are approved.
+          Score 0 (clean IP) still has only a 52% approval rate because the <em>purpose review</em> and <em>EVS export check</em> are independent gates.
+          <span class="ms-2">Median time to manual review: <strong id="kpi-review-median">—</strong> h &nbsp;|&nbsp; 90th percentile: <strong id="kpi-review-p90">—</strong> h</span>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-hdd-network"></i>IP fraud-score bucket — total vs approved</div>
+          <div id="chart-ip-scores" class="echart" style="height:320px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-envelope-exclamation"></i>Email fraud-score bucket — total vs approved</div>
+          <div id="chart-email-scores" class="echart" style="height:320px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-pie-chart"></i>Rejection pathway — auto vs manual review</div>
+          <div id="chart-rej-type" class="echart" style="height:280px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">
+            <strong>Auto-rejected</strong>: blocked by score/EVS checks before reaching a reviewer.
+            <strong>Manual review → reject</strong>: flagged for review, then rejected by a human. Median time to review: <span id="review-median-inline">—</span> h.
+          </p>
+        </div>
+      </div>
+      <div class="col-12 col-lg-7">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-bar-chart-horizontal"></i>Which checks failed for auto-rejected registrations (%)</div>
+          <div id="chart-auto-rej-reasons" class="echart" style="height:280px;"></div>
+        </div>
+      </div>
+
+      <!-- ── NEW: Score-gate funnel ── -->
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-filter"></i>Score-gate funnel — approved vs denied outcomes by path (default-event registrations)</div>
+          <div id="chart-score-gate" class="echart" style="height:320px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">
+            <strong>Both-pass</strong>: IP &amp; email scores both clean.
+            <strong>Any-fail</strong>: at least one score gate failed — still approved only if manually reviewed or whitelisted.
+            Event-code registrations bypass scoring entirely and are shown separately.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 7: Country Correlations ──────────────────────────────────── -->
+  <div id="tab-correlations" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12 col-lg-7">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-people"></i>Registrations by country (top 15)</div>
+          <div id="chart-country-count" class="echart" style="height:360px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-text-paragraph"></i>Avg purpose length by country (chars)</div>
+          <div id="chart-avg-len" class="echart" style="height:360px;"></div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-grid-3x3"></i>Topic distribution by country (% mentioning topic)</div>
+          <div id="chart-heatmap" class="echart" style="height:380px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-copy"></i>Duplicate / copy-paste rate by country (%)</div>
+          <div id="chart-dupe" class="echart" style="height:300px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-trash3"></i>Filler-only purpose rate by country (%)</div>
+          <div id="chart-filler" class="echart" style="height:300px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 8: 75-char Timeline ───────────────────────────────────────── -->
+  <div id="tab-timeline" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="callout">
+          <i class="bi bi-exclamation-triangle-fill me-2" style="color:#f5a623;"></i>
+          <strong>75-char minimum removed 10 Jul 2025 (~W28).</strong>
+          Before: ~88% purposes ≤75 chars. After: ~97% are longer.
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-bar-chart-line"></i>Weekly registrations — short (≤75) vs long (&gt;75 chars)</div>
+          <div id="chart-timeline-stacked" class="echart" style="height:340px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-8">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-graph-up-arrow"></i>% of registrations with purpose &gt;75 chars (per week)</div>
+          <div id="chart-pct-long" class="echart" style="height:280px;"></div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-rulers"></i>Exactly 75-char purposes per week</div>
+          <div id="chart-exact75" class="echart" style="height:280px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">Users padding to meet the 75-char minimum with filler (x…, ?…, etc.).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 9: Insights ───────────────────────────────────────────────── -->
+  <div id="tab-insights" class="tab-pane d-none">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-lightbulb"></i>Key findings &amp; recommendations</div>
+          <div id="insight-list" class="row g-2"></div>
+        </div>
+      </div>
+
+      <!-- ── NEW: Monthly approval-rate trend ── -->
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-graph-up-arrow"></i>Monthly approval rate trend (%) — is it improving?</div>
+          <div id="chart-appr-rate-trend" class="echart" style="height:280px;"></div>
+        </div>
+      </div>
+
+      <!-- ── NEW: Leaked-email outcome breakdown ── -->
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-envelope-slash"></i>Leaked-email registrations — approved vs denied</div>
+          <div id="chart-leaked-email" class="echart" style="height:280px;"></div>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">
+            Registrations where the email appeared in a known data-breach list. Despite the flag, a significant share are still approved.
+          </p>
+        </div>
+      </div>
+
+      <!-- ── NEW: Approval rate by country ── -->
+      <div class="col-12">
+        <div class="chart-card">
+          <div class="chart-title"><i class="bi bi-globe2"></i>Approval rate by country (countries with ≥300 registrations)</div>
+          <div id="chart-appr-by-country" class="echart" style="height:360px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-center py-3 mt-4">
+  LinuxONE Community Cloud &mdash; Registration Dashboard &nbsp;|&nbsp; Data: 2025-01 to 2026-09
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ─── palette ──────────────────────────────────────────────────────────────────
+const P = ['#0f62fe','#009d9a','#6929c4','#da1e28','#ff832b','#24a148',
+           '#ee5396','#1192e8','#a56eff','#005d5d','#fa4d56','#08bdba',
+           '#bae6ff','#d4bbff','#ffd6e8','#d9fbfb','#fff1f1','#defbe6','#f6f2ff'];
+
+const CAT_COLORS = {
+  'Web Development / Hosting':'#0f62fe','Learning Linux / Sysadmin':'#009d9a',
+  'Filler / Spam':'#da1e28','General Learning (Unspecified)':'#ff832b',
+  'AI / Machine Learning':'#6929c4','IBM Z Xplore / LNX Program':'#24a148',
+  'IBM LinuxONE / s390x Exploration':'#005d5d','Testing / Development Sandbox':'#ee5396',
+  'DevOps / Cloud / Infrastructure':'#1192e8','Research / Academic':'#a56eff',
+  'App / Software Development':'#fa4d56','Learning Programming / Technology':'#08bdba',
+  'Marketing Spam / Template':'#750e13','Security / Networking / VPN':'#002d9c',
+  'Hackathon / Datathon':'#198038','Database / Data Engineering':'#9f1853',
+  'Blockchain / Web3':'#00539a','IoT / Embedded Systems':'#d4bbff',
+  'Other / Unclassified':'#8d8d8d','General Learning (Unspecified)':'#ff832b',
+};
+
+const fmt = n => n.toLocaleString();
+const pct = (a,b) => b ? (100*a/b).toFixed(1)+'%' : '—';
+
+// ─── tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tabId) {
+  document.querySelectorAll('#mainTabs .nav-link').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`#mainTabs .nav-link[data-tab="${tabId}"]`);
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('d-none'));
+  const pane = document.getElementById(tabId);
+  if (pane) pane.classList.remove('d-none');
+  window.dispatchEvent(new Event('resize'));
+}
+
+document.querySelectorAll('#mainTabs .nav-link[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// ─── KPI card navigation ───────────────────────────────────────────────────────
+document.getElementById('kpi-row').addEventListener('click', e => {
+  const card = e.target.closest('.kpi-card[data-tab]');
+  if (card) switchTab(card.dataset.tab);
+});
+document.getElementById('kpi-row').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const card = e.target.closest('.kpi-card[data-tab]');
+    if (card) { e.preventDefault(); switchTab(card.dataset.tab); }
+  }
+});
+
+// ─── load data ────────────────────────────────────────────────────────────────
+fetch('dashboard_data.json')
+  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+  .then(init)
+  .catch(e => {
+    document.getElementById('kpi-row').innerHTML =
+      `<div class="col-12"><div class="alert alert-danger">Could not load dashboard_data.json — run <code>python3 generate_data.py</code> first. (${e.message})</div></div>`;
+  });
+
+function init(d) {
+  const s = d.summary;
+  document.getElementById('kpi-total').textContent    = fmt(s.total_records);
+  document.getElementById('kpi-approved').textContent = fmt(s.total_approved);
+  document.getElementById('kpi-countries').textContent= fmt(s.total_countries);
+  document.getElementById('kpi-2025').textContent     = fmt(s.total_2025);
+  document.getElementById('kpi-2026').textContent     = fmt(s.total_2026);
+  const rejPct = (100*(s.total_records-s.total_approved)/s.total_records).toFixed(1)+'%';
+  document.getElementById('kpi-reject-pct').textContent = rejPct;
+  document.getElementById('nav-date-range').textContent = s.date_range_start+' – '+s.date_range_end;
+  const rMed = d.fraud.review_median_h, rP90 = d.fraud.review_p90_h;
+  if(document.getElementById('kpi-review-median')) document.getElementById('kpi-review-median').textContent = rMed;
+  if(document.getElementById('kpi-review-p90'))    document.getElementById('kpi-review-p90').textContent    = rP90;
+  if(document.getElementById('review-median-inline')) document.getElementById('review-median-inline').textContent = rMed;
+
+  buildMonthlyTotal(d);
+  buildMonthlyApproved(d);
+  buildMonthlyEdu(d);
+  buildMonthlyZxplore(d);
+  buildCatDonutAll(d.categories_all);
+  buildCatCompare(d.categories_all, d.categories_approved);
+  buildCatYearChart('chart-cat-year-all',  d.categories_all);
+  buildCatYearChart('chart-cat-year-appr', d.categories_approved);
+  buildCatTable(d.categories_all, d.categories_approved);
+  buildLimitCompare(d.limit_impact);
+  buildLimitTable(d.limit_impact);
+  buildLimitCallout(d.limit_impact);
+  buildSpamHeatmap(d);
+  buildSpamStacked(d);
+  buildEventBar(d.events);
+  buildEventRates(d.events);
+  buildEventMonthly(d);
+  buildEventTable(d.events);
+  buildIpScores(d.fraud.ip_scores);
+  buildEmailScores(d.fraud.email_scores);
+  buildRejType(d.fraud);
+  buildAutoRejReasons(d.fraud);
+  buildScoreGate(d.fraud);
+  buildCountryCount(d.correlations);
+  buildAvgLen(d.correlations);
+  buildHeatmap(d.correlations);
+  buildDupe(d.correlations);
+  buildFiller(d.correlations);
+  buildTimelineStacked(d.timeline);
+  buildPctLong(d.timeline);
+  buildExact75(d.timeline);
+  buildInsights(d);
+  buildApprRateTrend(d);
+  buildLeakedEmail(d.fraud);
+  buildApprByCountry(d.approval_by_country);
+}
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+function monthLabels(months) {
+  return months.map(m => { const [y,mo]=m.split('-'); return mo+'/'+y.slice(2); });
+}
+
+function lineOpts(months, seriesList, opts={}) {
+  return {
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0,data:seriesList.map(s=>s.name)},
+    grid:{left:50,right:20,top:20,bottom:opts.noLegend?20:40},
+    xAxis:{type:'category',data:monthLabels(months),axisLabel:{rotate:45,fontSize:11}},
+    yAxis:{type:'value',minInterval:1},
+    series:seriesList.map(s=>({type:'line',smooth:true,symbolSize:4,...s})),
+  };
+}
+
+function barHorizOpts(labels, values, color) {
+  return {
+    tooltip:{trigger:'axis'},
+    grid:{left:220,right:60,top:10,bottom:10},
+    xAxis:{type:'value',minInterval:1},
+    yAxis:{type:'category',data:labels,axisLabel:{fontSize:11}},
+    series:[{type:'bar',data:values,itemStyle:{color},label:{show:true,position:'right',formatter:p=>fmt(p.value)}}],
+  };
+}
+
+// ─── Monthly Total ────────────────────────────────────────────────────────────
+function buildMonthlyTotal(d) {
+  const c = echarts.init(document.getElementById('chart-monthly-total'));
+  const split = d.months.indexOf('2026-01');
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0,data:['2025','2026','Approved']},
+    grid:{left:55,right:20,top:30,bottom:50},
+    xAxis:{type:'category',data:monthLabels(d.months),axisLabel:{rotate:45,fontSize:11}},
+    yAxis:{type:'value',minInterval:1},
+    series:[
+      {name:'2025',type:'bar',stack:'yr',
+        data:d.monthly_total.map((v,i)=>i<split?v:0),
+        itemStyle:{color:'#0f62fe'}},
+      {name:'2026',type:'bar',stack:'yr',
+        data:d.monthly_total.map((v,i)=>i>=split?v:0),
+        itemStyle:{color:'#ff832b'}},
+      {name:'Approved',type:'line',smooth:true,symbolSize:4,
+        data:d.monthly_approved,
+        lineStyle:{color:'#24a148',width:2},itemStyle:{color:'#24a148'}},
+    ],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildMonthlyApproved(d) {
+  const c = echarts.init(document.getElementById('chart-monthly-approved'));
+  c.setOption(lineOpts(d.months,[{name:'Approved',data:d.monthly_approved,lineStyle:{color:'#24a148',width:2},itemStyle:{color:'#24a148'},areaStyle:{color:'rgba(36,161,72,.15)'}}]));
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildMonthlyEdu(d) {
+  const c = echarts.init(document.getElementById('chart-monthly-edu'));
+  c.setOption(lineOpts(d.months,[{name:'Education',data:d.monthly_edu,lineStyle:{color:'#6929c4',width:2},itemStyle:{color:'#6929c4'},areaStyle:{color:'rgba(105,41,196,.12)'}}]));
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildMonthlyZxplore(d) {
+  const c = echarts.init(document.getElementById('chart-monthly-zxplore'));
+  c.setOption(lineOpts(d.months,[
+    {name:'IBMZXPLORE event code',data:d.monthly_zxplore_event,  lineStyle:{color:'#24a148',width:2},itemStyle:{color:'#24a148'},areaStyle:{color:'rgba(36,161,72,.10)'}},
+    {name:'Z Xplore in purpose',  data:d.monthly_zxplore_purpose,lineStyle:{color:'#009d9a',width:2},itemStyle:{color:'#009d9a'},areaStyle:{color:'rgba(0,157,154,.10)'}},
+  ]));
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+function buildCatDonutAll(cats) {
+  const c = echarts.init(document.getElementById('chart-donut-all'));
+  const top = [...cats.labels.map((l,i)=>({name:l,value:cats.counts[i]}))].sort((a,b)=>b.value-a.value);
+  c.setOption({
+    tooltip:{trigger:'item',formatter:p=>`${p.name}<br/>${fmt(p.value)} (${(100*p.value/cats.total).toFixed(1)}%)`},
+    legend:{orient:'horizontal',bottom:0,left:'center',data:top.map(x=>x.name),
+      textStyle:{fontSize:10},icon:'roundRect',itemWidth:10,itemHeight:10,
+      formatter:name=>name.length>22?name.slice(0,21)+'…':name},
+    series:[{type:'pie',radius:['38%','65%'],center:['50%','44%'],
+      data:top.map(x=>({...x,itemStyle:{color:CAT_COLORS[x.name]||'#8d8d8d'}})),
+      label:{show:false},emphasis:{label:{show:true,fontSize:12}}}],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildCatCompare(all, appr) {
+  const c = echarts.init(document.getElementById('chart-cat-compare'));
+  const sorted = [...all.labels.map((l,i)=>({l,a:all.counts[i],b:appr.counts[i]}))].sort((x,y)=>y.a-x.a);
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0,data:['All','Approved']},
+    grid:{left:220,right:20,top:10,bottom:40},
+    xAxis:{type:'value',minInterval:1},
+    yAxis:{type:'category',data:sorted.map(x=>x.l),axisLabel:{fontSize:10}},
+    series:[
+      {name:'All',type:'bar',data:sorted.map(x=>x.a),itemStyle:{color:'#0f62fe'},label:{show:true,position:'right',fontSize:10,formatter:p=>fmt(p.value)}},
+      {name:'Approved',type:'bar',data:sorted.map(x=>x.b),itemStyle:{color:'#24a148'},label:{show:true,position:'right',fontSize:10,formatter:p=>fmt(p.value)}},
+    ],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildCatYearChart(elemId, cats) {
+  const c = echarts.init(document.getElementById(elemId));
+  const sorted = [...cats.labels.map((l,i)=>({l,v25:cats.counts_2025[i],v26:cats.counts_2026[i]}))].sort((x,y)=>(y.v25+y.v26)-(x.v25+x.v26));
+  c.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{bottom:0,data:['2025','2026']},
+    grid:{left:220,right:20,top:10,bottom:50},
+    xAxis:{type:'value',minInterval:1},
+    yAxis:{type:'category',data:sorted.map(x=>x.l),axisLabel:{fontSize:10}},
+    series:[
+      {name:'2025',type:'bar',data:sorted.map(x=>x.v25),itemStyle:{color:'#0f62fe'},label:{show:true,position:'right',fontSize:9,formatter:p=>fmt(p.value)}},
+      {name:'2026',type:'bar',data:sorted.map(x=>x.v26),itemStyle:{color:'#ff832b'},label:{show:true,position:'right',fontSize:9,formatter:p=>fmt(p.value)}},
+    ],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildCatTable(all, appr) {
+  const sorted = [...all.labels.map((l,i)=>({
+    l,
+    a:all.counts[i], a25:all.counts_2025[i], a26:all.counts_2026[i],
+    b:appr.counts[i],b25:appr.counts_2025[i],b26:appr.counts_2026[i],
+  }))].sort((x,y)=>y.a-x.a);
+  const tbody = document.getElementById('cat-tbody');
+  sorted.forEach(({l,a,a25,a26,b,b25,b26},i)=>{
+    const ap = a?Math.round(100*b/a):0;
+    const sh = a?Math.round(100*a/all.total):0;
+    tbody.insertAdjacentHTML('beforeend',`
+      <tr>
+        <td>${i+1}</td>
+        <td><span class="cat-badge" style="background:${CAT_COLORS[l]||'#8d8d8d'}"></span>${l}</td>
+        <td class="text-end fw-bold">${fmt(a)}</td>
+        <td class="text-end">${fmt(a25)}</td><td class="text-end">${fmt(a26)}</td>
+        <td class="text-end fw-bold">${fmt(b)}</td>
+        <td class="text-end">${fmt(b25)}</td><td class="text-end">${fmt(b26)}</td>
+        <td class="text-end"><span class="badge ${ap>=60?'bg-success':ap>=30?'bg-warning text-dark':'bg-danger'}">${ap}%</span></td>
+        <td><div class="progress"><div class="progress-bar" style="width:${sh}%;background:${CAT_COLORS[l]||'#8d8d8d'}"></div></div></td>
+      </tr>`);
+  });
+}
+
+// ─── 75-char Limit Impact ─────────────────────────────────────────────────────
+function buildLimitCompare(li) {
+  const c = echarts.init(document.getElementById('chart-limit-compare'));
+  const sorted = [...li.labels.map((l,i)=>({l,pre:li.pre_pct[i],post:li.post_pct[i],d:li.post_pct[i]-li.pre_pct[i]}))].sort((a,b)=>a.d-b.d);
+  c.setOption({
+    tooltip:{trigger:'axis',formatter:params=>{
+      const pre=params.find(p=>p.seriesName==='Before (≤75)');
+      const post=params.find(p=>p.seriesName==='After (>75)');
+      const delta=post&&pre?(post.value-pre.value).toFixed(1):0;
+      return `${sorted[params[0].dataIndex].l}<br/>Before: ${pre?.value??0}%<br/>After: ${post?.value??0}%<br/>Δ ${delta>0?'+':''}${delta} pp`;
+    }},
+    legend:{bottom:0,data:['Before (≤75)','After (>75)']},
+    grid:{left:220,right:60,top:10,bottom:40},
+    xAxis:{type:'value',axisLabel:{formatter:v=>v+'%'}},
+    yAxis:{type:'category',data:sorted.map(x=>x.l),axisLabel:{fontSize:10}},
+    series:[
+      {name:'Before (≤75)',type:'bar',data:sorted.map(x=>x.pre),itemStyle:{color:'#c8c8c8'},label:{show:true,position:'right',formatter:p=>p.value+'%',fontSize:10}},
+      {name:'After (>75)', type:'bar',data:sorted.map(x=>x.post),itemStyle:{color:'#0f62fe'},label:{show:true,position:'right',formatter:p=>p.value+'%',fontSize:10}},
+    ],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildLimitTable(li) {
+  const tbody = document.getElementById('limit-tbody');
+  const rows = li.labels.map((l,i)=>({l, preC:li.pre_count[i], preP:li.pre_pct[i], postC:li.post_count[i], postP:li.post_pct[i], d:li.post_pct[i]-li.pre_pct[i]})).sort((a,b)=>a.d-b.d);
+  rows.forEach(r=>{
+    const clr = r.d<-2?'text-danger':r.d>2?'text-success':'';
+    tbody.insertAdjacentHTML('beforeend',`
+      <tr>
+        <td>${r.l}</td><td class="text-end">${fmt(r.preC)}</td><td class="text-end">${r.preP}%</td>
+        <td class="text-end">${fmt(r.postC)}</td><td class="text-end">${r.postP}%</td>
+        <td class="text-end ${clr} fw-bold">${r.d>0?'+':''}${r.d.toFixed(1)} pp</td>
+      </tr>`);
+  });
+}
+
+// ─── Spam by Country ──────────────────────────────────────────────────────────
+function buildSpamHeatmap(d) {
+  const c = echarts.init(document.getElementById('chart-spam-heatmap'));
+  const countries = d.spam_countries;
+  const months = d.months;
+  const vals = [];
+  let maxV = 0;
+  countries.forEach((cc,ci)=>{
+    (d.spam_by_country[cc]||[]).forEach((v,mi)=>{ if(v>maxV)maxV=v; vals.push([mi,ci,v]); });
+  });
+  c.setOption({
+    tooltip:{formatter:p=>`${months[p.data[0]]} / ${countries[p.data[1]]}<br/>${fmt(p.data[2])} spam regs`},
+    grid:{left:50,right:100,top:10,bottom:80},
+    xAxis:{type:'category',data:monthLabels(months),axisLabel:{rotate:45,fontSize:10}},
+    yAxis:{type:'category',data:countries},
+    visualMap:{min:0,max:Math.max(maxV,1),calculable:true,orient:'vertical',right:0,top:'center',
+      inRange:{color:['#f4f4f4','#ffd6e8','#fa4d56','#750e13']}},
+    series:[{type:'heatmap',data:vals,label:{show:true,fontSize:9,formatter:p=>p.data[2]||''}}],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildSpamStacked(d) {
+  const c = echarts.init(document.getElementById('chart-spam-stacked'));
+  const TOP = d.spam_countries.slice(0,8);
+  c.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{bottom:0,data:TOP},
+    grid:{left:50,right:20,top:20,bottom:50},
+    xAxis:{type:'category',data:monthLabels(d.months),axisLabel:{rotate:45,fontSize:11}},
+    yAxis:{type:'value',minInterval:1},
+    series:TOP.map((cc,i)=>({
+      name:cc,type:'bar',stack:'spam',
+      data:d.spam_by_country[cc]||d.months.map(()=>0),
+      itemStyle:{color:P[i]},
+    })),
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── Events ───────────────────────────────────────────────────────────────────
+function buildEventBar(events) {
+  const c = echarts.init(document.getElementById('chart-event-bar'));
+  const sorted = [...events].sort((a,b)=>b.total-a.total);
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:160,right:60,top:10,bottom:10},
+    xAxis:{type:'value',minInterval:1},
+    yAxis:{type:'category',data:sorted.map(e=>e.code),axisLabel:{fontSize:11}},
+    series:[
+      {name:'Total',type:'bar',data:sorted.map(e=>e.total),itemStyle:{color:'#0f62fe'},label:{show:true,position:'right',formatter:p=>fmt(p.value)}},
+      {name:'Approved',type:'bar',data:sorted.map(e=>e.approved),itemStyle:{color:'#24a148'},label:{show:true,position:'right',formatter:p=>fmt(p.value)}},
+    ],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildEventRates(events) {
+  const c = echarts.init(document.getElementById('chart-event-rates'));
+  const sorted = [...events].sort((a,b)=>b.total-a.total);
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0,data:['Appr %','IP Fail %','Email Fail %']},
+    grid:{left:160,right:20,top:10,bottom:40},
+    xAxis:{type:'value',axisLabel:{formatter:v=>v+'%'},max:100},
+    yAxis:{type:'category',data:sorted.map(e=>e.code)},
+    series:[
+      {name:'Appr %',type:'bar',data:sorted.map(e=>e.appr_pct),itemStyle:{color:'#24a148'}},
+      {name:'IP Fail %',type:'bar',data:sorted.map(e=>e.ip_fail_pct),itemStyle:{color:'#da1e28'}},
+      {name:'Email Fail %',type:'bar',data:sorted.map(e=>e.em_fail_pct),itemStyle:{color:'#ff832b'}},
+    ],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildEventMonthly(d) {
+  const c = echarts.init(document.getElementById('chart-event-monthly'));
+  const TOP_EVENTS = d.events.slice(0,6);
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0,data:TOP_EVENTS.map(e=>e.code)},
+    grid:{left:55,right:20,top:20,bottom:50},
+    xAxis:{type:'category',data:monthLabels(d.months),axisLabel:{rotate:45,fontSize:11}},
+    yAxis:{type:'value',minInterval:1},
+    series:TOP_EVENTS.map((e,i)=>({name:e.code,type:'line',smooth:true,symbolSize:4,data:e.monthly,lineStyle:{color:P[i]},itemStyle:{color:P[i]}})),
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildEventTable(events) {
+  const tbody = document.getElementById('event-tbody');
+  [...events].sort((a,b)=>b.total-a.total).forEach(e=>{
+    const cats = e.top_cats.slice(0,3).map(([cat,n])=>`<span class="badge bg-secondary me-1" style="font-size:.72rem;">${cat} (${n})</span>`).join('');
+    const aClr = e.appr_pct>=90?'success':e.appr_pct>=50?'warning text-dark':'danger';
+    tbody.insertAdjacentHTML('beforeend',`
+      <tr>
+        <td><code>${e.code}</code></td><td class="text-end">${fmt(e.total)}</td><td class="text-end">${fmt(e.approved)}</td>
+        <td class="text-end"><span class="badge bg-${aClr}">${e.appr_pct}%</span></td>
+        <td class="text-end">${e.ip_fail_pct}%</td><td class="text-end">${e.em_fail_pct}%</td>
+        <td style="font-size:.8rem;">${cats}</td>
+      </tr>`);
+  });
+}
+
+// ─── Fraud Scores ─────────────────────────────────────────────────────────────
+function buildScoreChart(elemId, data, title) {
+  const c = echarts.init(document.getElementById(elemId));
+  c.setOption({
+    tooltip:{trigger:'axis',formatter:params=>{
+      const [t,a,p]=params;
+      return `Score ${t.axisValue}<br/>Total: ${fmt(t.value)}<br/>Approved: ${fmt(a.value)}<br/>Appr %: ${p.value}%`;
+    }},
+    legend:{bottom:0,data:['Total','Approved','Appr %']},
+    grid:{left:55,right:55,top:20,bottom:40},
+    xAxis:{type:'category',data:data.buckets},
+    yAxis:[{type:'value',name:'Count',minInterval:1},{type:'value',name:'%',max:100,axisLabel:{formatter:v=>v+'%'}}],
+    series:[
+      {name:'Total',   type:'bar',data:data.total,   itemStyle:{color:'#c8c8c8'}},
+      {name:'Approved',type:'bar',data:data.approved,itemStyle:{color:'#24a148'}},
+      {name:'Appr %',  type:'line',yAxisIndex:1,data:data.appr_pct,smooth:true,symbolSize:5,lineStyle:{color:'#0f62fe',width:2},itemStyle:{color:'#0f62fe'}},
+    ],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+function buildIpScores(d)    { buildScoreChart('chart-ip-scores',d,'IP fraud-score'); }
+function buildEmailScores(d) { buildScoreChart('chart-email-scores',d,'Email fraud-score'); }
+
+function buildRejType(fraud) {
+  const c = echarts.init(document.getElementById('chart-rej-type'));
+  const total = fraud.total;
+  const appr  = fraud.approved;
+  const rej   = total - appr;
+  c.setOption({
+    tooltip:{trigger:'item',formatter:p=>`${p.name}: ${fmt(p.value)} (${(100*p.value/total).toFixed(1)}%)`},
+    series:[{type:'pie',radius:['40%','65%'],
+      data:[
+        {name:'Approved',value:appr,itemStyle:{color:'#24a148'}},
+        {name:'Manual review → reject',value:fraud.manual_rejected,itemStyle:{color:'#da1e28'}},
+        {name:'Auto-rejected',value:fraud.auto_rejected,itemStyle:{color:'#ff832b'}},
+      ],
+      label:{formatter:p=>`${p.name}\n${fmt(p.value)}`},
+    }],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildAutoRejReasons(fraud) {
+  const c = echarts.init(document.getElementById('chart-auto-rej-reasons'));
+  const reasons = fraud.auto_rej_reasons;
+  const labels  = Object.keys(reasons);
+  const vals    = Object.values(reasons);
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:160,right:60,top:10,bottom:10},
+    xAxis:{type:'value',max:100,axisLabel:{formatter:v=>v+'%'}},
+    yAxis:{type:'category',data:labels,axisLabel:{fontSize:11}},
+    series:[{type:'bar',data:vals,itemStyle:{color:'#da1e28'},label:{show:true,position:'right',formatter:p=>p.value+'%'}}],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── Country Correlations ─────────────────────────────────────────────────────
+function buildCountryCount(corr) {
+  const c = echarts.init(document.getElementById('chart-country-count'));
+  c.setOption(barHorizOpts([...corr.countries].reverse(),[...corr.registration_counts].reverse(),'#0f62fe'));
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildAvgLen(corr) {
+  const c = echarts.init(document.getElementById('chart-avg-len'));
+  c.setOption(barHorizOpts([...corr.countries].reverse(),[...corr.avg_purpose_len].reverse(),'#6929c4'));
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildHeatmap(corr) {
+  const c = echarts.init(document.getElementById('chart-heatmap'));
+  const vals=[]; let maxV=0;
+  corr.countries.forEach((cc,ci)=>{
+    corr.topic_matrix[cc].forEach((v,ti)=>{ if(v>maxV)maxV=v; vals.push([ti,ci,v]); });
+  });
+  c.setOption({
+    tooltip:{formatter:p=>`${corr.countries[p.data[1]]} — ${corr.topics[p.data[0]]}<br/>${p.data[2]}%`},
+    grid:{left:50,right:140,top:60,bottom:10},
+    xAxis:{type:'category',data:corr.topics,axisLabel:{rotate:30,fontSize:10}},
+    yAxis:{type:'category',data:corr.countries},
+    visualMap:{min:0,max:maxV,calculable:true,orient:'vertical',right:0,top:'center',
+      inRange:{color:['#f4f4f4','#bae6ff','#0f62fe','#002d9c']}},
+    series:[{type:'heatmap',data:vals,label:{show:true,fontSize:10,formatter:p=>p.data[2]+'%'}}],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildDupe(corr) {
+  const c = echarts.init(document.getElementById('chart-dupe'));
+  c.setOption(barHorizOpts([...corr.countries].reverse(),[...corr.dupe_pct].reverse(),'#ff832b'));
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildFiller(corr) {
+  const c = echarts.init(document.getElementById('chart-filler'));
+  c.setOption(barHorizOpts([...corr.countries].reverse(),[...corr.filler_pct].reverse(),'#da1e28'));
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── 75-char Timeline ─────────────────────────────────────────────────────────
+function buildTimelineStacked(tl) {
+  const c = echarts.init(document.getElementById('chart-timeline-stacked'));
+  const cutIdx = tl.weeks.indexOf('2025-W28');
+  c.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{bottom:0,data:['≤75 chars','>75 chars']},
+    grid:{left:55,right:20,top:30,bottom:50},
+    xAxis:{type:'category',data:tl.weeks,axisLabel:{rotate:45,fontSize:9}},
+    yAxis:{type:'value',minInterval:1},
+    series:[
+      {name:'≤75 chars',type:'bar',stack:'total',data:tl.short,itemStyle:{color:'#c8c8c8'}},
+      {name:'>75 chars', type:'bar',stack:'total',data:tl.long, itemStyle:{color:'#0f62fe'}},
+    ],
+    markLine:cutIdx>=0?{data:[{xAxis:cutIdx,name:'Cutover',label:{formatter:'Jul 10'},lineStyle:{color:'#da1e28',type:'dashed'}}]}:undefined,
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildPctLong(tl) {
+  const c = echarts.init(document.getElementById('chart-pct-long'));
+  c.setOption({
+    tooltip:{trigger:'axis',formatter:p=>`${p[0].axisValue}<br/>${p[0].value}% long`},
+    grid:{left:55,right:20,top:20,bottom:50},
+    xAxis:{type:'category',data:tl.weeks,axisLabel:{rotate:45,fontSize:9}},
+    yAxis:{type:'value',min:0,max:100,axisLabel:{formatter:v=>v+'%'}},
+    series:[{type:'line',smooth:true,symbolSize:3,data:tl.pct_long,
+      areaStyle:{color:'rgba(15,98,254,.12)'},lineStyle:{color:'#0f62fe',width:2},itemStyle:{color:'#0f62fe'}}],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+function buildExact75(tl) {
+  const c = echarts.init(document.getElementById('chart-exact75'));
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:55,right:20,top:20,bottom:50},
+    xAxis:{type:'category',data:tl.weeks,axisLabel:{rotate:45,fontSize:9}},
+    yAxis:{type:'value',minInterval:1},
+    series:[{type:'bar',data:tl.exact75,itemStyle:{color:'#6929c4'}}],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── 75-char limit callout (dynamic drop/rise lists) ─────────────────────────
+function buildLimitCallout(li) {
+  const diffs = li.labels.map((l,i)=>({l,d:+(li.post_pct[i]-li.pre_pct[i]).toFixed(1)}));
+  const drops = diffs.filter(x=>x.d<-1).sort((a,b)=>a.d-b.d).map(x=>`${x.l} (${x.d} pp)`);
+  const rises = diffs.filter(x=>x.d>1) .sort((a,b)=>b.d-a.d).map(x=>`${x.l} (+${x.d} pp)`);
+  const dl = document.getElementById('limit-drop-list');
+  const rl = document.getElementById('limit-rise-list');
+  if(dl) dl.textContent = drops.join(', ') || '—';
+  if(rl) rl.textContent = rises.join(', ') || '—';
+}
+
+// ─── Score-gate funnel ────────────────────────────────────────────────────────
+function buildScoreGate(fraud) {
+  const c = echarts.init(document.getElementById('chart-score-gate'));
+  const sg = fraud.score_gate;
+  const cats = ['Both scores pass','Any score fails (approved)','Any score fails (manual-denied)','Any score fails (auto-denied)','Event-code path (approved)','Event-code path (bypass/denied)'];
+  const vals = [
+    sg.both_pass_approved,
+    sg.any_fail_approved,
+    sg.any_fail_manual_denied,
+    sg.any_fail_auto_denied,
+    sg.event_approved,
+    sg.event_total - sg.event_approved,
+  ];
+  const colors = ['#24a148','#009d9a','#ff832b','#da1e28','#0f62fe','#c8c8c8'];
+  c.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:230,right:80,top:10,bottom:10},
+    xAxis:{type:'value',minInterval:1},
+    yAxis:{type:'category',data:cats,axisLabel:{fontSize:10}},
+    series:[{
+      type:'bar',
+      data:vals.map((v,i)=>({value:v,itemStyle:{color:colors[i]}})),
+      label:{show:true,position:'right',formatter:p=>fmt(p.value)},
+    }],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── Approval-rate trend ──────────────────────────────────────────────────────
+function buildApprRateTrend(d) {
+  const c = echarts.init(document.getElementById('chart-appr-rate-trend'));
+  const rates = d.monthly_total.map((tot,i)=>tot?+(100*d.monthly_approved[i]/tot).toFixed(1):0);
+  const split  = d.months.indexOf('2026-01');
+  c.setOption({
+    tooltip:{trigger:'axis',formatter:p=>`${p[0].axisValue}<br/>Approval rate: ${p[0].value}%`},
+    grid:{left:55,right:20,top:20,bottom:50},
+    xAxis:{type:'category',data:monthLabels(d.months),axisLabel:{rotate:45,fontSize:11}},
+    yAxis:{type:'value',min:0,max:100,axisLabel:{formatter:v=>v+'%'}},
+    series:[{
+      type:'line',smooth:true,symbolSize:5,
+      data:rates,
+      lineStyle:{color:'#0f62fe',width:2},
+      itemStyle:{color:p=>p.dataIndex<split?'#0f62fe':'#ff832b'},
+      areaStyle:{color:'rgba(15,98,254,.10)'},
+      markLine:{data:[{type:'average',name:'Avg',label:{formatter:p=>p.value+'%'},lineStyle:{color:'#6929c4',type:'dashed'}}]},
+    }],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── Leaked-email outcome ─────────────────────────────────────────────────────
+function buildLeakedEmail(fraud) {
+  const c = echarts.init(document.getElementById('chart-leaked-email'));
+  const sg = fraud.score_gate;
+  const leakedAppr   = sg.leaked_approved;
+  const leakedDenied = sg.leaked_total - sg.leaked_approved;
+  c.setOption({
+    tooltip:{trigger:'item',formatter:p=>`${p.name}: ${fmt(p.value)} (${(100*p.value/sg.leaked_total).toFixed(1)}%)`},
+    legend:{bottom:0},
+    series:[{
+      type:'pie',radius:['38%','65%'],
+      data:[
+        {name:'Approved despite leaked flag', value:leakedAppr,  itemStyle:{color:'#ff832b'}},
+        {name:'Denied (leaked flag)',          value:leakedDenied,itemStyle:{color:'#da1e28'}},
+      ],
+      label:{formatter:p=>`${p.name}\n${fmt(p.value)}`},
+    }],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── Approval rate by country ─────────────────────────────────────────────────
+function buildApprByCountry(rows) {
+  const c = echarts.init(document.getElementById('chart-appr-by-country'));
+  const sorted = [...rows].sort((a,b)=>b.appr_pct-a.appr_pct);
+  c.setOption({
+    tooltip:{trigger:'axis',formatter:params=>{
+      const r = sorted[params[0].dataIndex];
+      return `${r.country}<br/>Approved: ${fmt(r.approved)} / ${fmt(r.total)} (${r.appr_pct}%)`;
+    }},
+    grid:{left:50,right:80,top:10,bottom:10},
+    xAxis:{type:'value',max:100,axisLabel:{formatter:v=>v+'%'}},
+    yAxis:{type:'category',data:sorted.map(r=>r.country),axisLabel:{fontSize:11}},
+    series:[{
+      type:'bar',
+      data:sorted.map(r=>({value:r.appr_pct,itemStyle:{color:r.appr_pct>=60?'#24a148':r.appr_pct>=30?'#ff832b':'#da1e28'}})),
+      label:{show:true,position:'right',formatter:p=>p.value+'%'},
+    }],
+  });
+  window.addEventListener('resize',()=>c.resize());
+}
+
+// ─── Insights ─────────────────────────────────────────────────────────────────
+function buildInsights(d) {
+  const f = d.fraud;
+  const ca = d.categories_all;
+  const li = d.limit_impact;
+  const sg = f.score_gate;
+
+  // compute biggest drop & rise in limit_impact
+  const diffs = li.labels.map((l,i)=>({l,d:li.post_pct[i]-li.pre_pct[i]})).sort((a,b)=>a.d-b.d);
+  const bigDrop = diffs[0]; const bigRise = diffs[diffs.length-1];
+
+  // approval rate of "Other / Unclassified"
+  const oi = ca.labels.indexOf('Other / Unclassified');
+  const otherAppr = ca.counts[oi]?Math.round(100*d.categories_approved.counts[oi]/ca.counts[oi]):0;
+
+  // year-over-year shift for top category
+  const topCat = ca.labels[ca.counts.indexOf(Math.max(...ca.counts))];
+  const topCatIdx = ca.labels.indexOf(topCat);
+
+  const items = [
+    ['bi-bar-chart-line','Volume',
+     `<strong>${fmt(d.summary.total_records)} total registrations</strong> across both years. 2025 accounts for ${pct(d.summary.total_2025,d.summary.total_records)} (${fmt(d.summary.total_2025)}); 2026 currently at ${fmt(d.summary.total_2026)} through ${d.summary.date_range_end}. Monthly peak: Jun 2025 (4,296) — driven by a US-sourced spike, not purely the SSF2025 event.`],
+    ['bi-check-circle','Approval rate',
+     `Only <strong>${pct(f.approved,f.total)}</strong> of all registrations are approved. ${pct(sg.both_pass_approved,f.total)} had both scores clean and were approved; ${pct(sg.any_fail_approved,f.total)} were approved despite a failing score (manual review or whitelist). ${pct(f.auto_rejected,f.total)} were blocked before any human saw them.`],
+    ['bi-rulers','75-char limit impact',
+     `Enforcing a 75-char minimum on 10 Jul 2025 <strong>transformed data quality</strong>. "${bigDrop.l}" dropped ${Math.abs(bigDrop.d).toFixed(1)} pp; "${bigRise.l}" rose ${bigRise.d.toFixed(1)} pp. Median purpose length went from 21 chars to 126 chars. Exact-75 padding (filler completions) collapsed to near-zero post-cutover.`],
+    ['bi-shield-exclamation','Fraud scores',
+     `IP score 100 → only ~5% approved. Email score 100 → only ~3% approved. A score of 0 still yields only a 46% approval rate — purpose review and EVS checks are independent gates. <strong>${fmt(f.evs_embargo)}</strong> registrations blocked by export-control embargo. <strong>${fmt(sg.leaked_total)}</strong> had a leaked-email flag; ${fmt(sg.leaked_approved)} (${pct(sg.leaked_approved,sg.leaked_total)}) were still approved.`],
+    ['bi-calendar-event','Event-code whitelist',
+     `Non-default event codes bypass all fraud checks — <strong>100% approved</strong>. ${fmt(f.whitelist_approved)} approvals came via whitelist. Concern: ${fmt(sg.event_approved_with_failed_score)} event-path approvals had failing IP or email scores. <strong>Recommendation:</strong> require manual sign-off before activating any new event code; set a registration cap per code.`],
+    ['bi-clock-history','Manual review queue',
+     `Median time from registration to review: <strong>${f.review_median_h} h</strong> (P90: ${f.review_p90_h} h — nearly 6 days). ${fmt(sg.any_fail_reviewed_approved)} registrations with failing scores were still approved by a reviewer. Reducing the P90 backlog should be a priority.`],
+    ['bi-globe2','Country patterns',
+     `CN and US lead in volume (~7,300 each) but diverge in quality: CN has 37% approval, US 27%. India (IN) jumps to 74% — almost entirely driven by the SSF2025 hackathon. Morocco (MA) has a 7% approval rate with 79% filler. Vietnam (VN) shows 31% copy-paste duplication.`],
+    ['bi-trash3','Spam geography',
+     `MA and CN are the top spam sources. MA spam is hyper-concentrated: 318 identical "education" submissions in a single week (Nov 2025). <strong>Recommended action:</strong> add a server-side duplicate-purpose check — if the same exact text has been submitted ≥10 times in 24 h, flag for manual review.`],
+    ['bi-award','IBM Z Xplore',
+     `Z Xplore is the most consistent programme: 100–175 registrations every month, 100% approval, and event-code count tracks closely with purpose-keyword count — confirming real engagement (not bot traffic). 2026 volumes are on pace with 2025.`],
+    ['bi-question-circle','Other / Unclassified',
+     `<strong>${pct(ca.counts[oi],ca.total)}</strong> of all registrations (${fmt(ca.counts[oi])} records) fall into "Other / Unclassified" — approval rate ${otherAppr}%. Many are legitimate long-form purposes that don't match category keywords. Expanding the classifier (e.g. adding "data science", "cloud computing", "HPC") could reclassify thousands.`],
+    ['bi-lightning','Additional charts added',
+     `Based on pattern analysis: <strong>(1)</strong> Monthly approval-rate trend — see Insights tab. <strong>(2)</strong> Leaked-email outcome — ${pct(sg.leaked_approved,sg.leaked_total)} of leaked-flag registrations still approved. <strong>(3)</strong> Approval rate by country — IN/BR/CA top performers; MA/HK bottom. <strong>(4)</strong> Score-gate funnel — see Fraud Scores tab.`],
+  ];
+
+  const el = document.getElementById('insight-list');
+  items.forEach(([icon, title, body]) => {
+    el.insertAdjacentHTML('beforeend',`
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="insight-badge">
+          <i class="bi ${icon} fs-5"></i>
+          <div><strong>${title}</strong><br/><span style="color:#525252;font-size:.82rem;">${body}</span></div>
+        </div>
+      </div>`);
+  });
+}
+
+</script>
+</body>
+</html>
